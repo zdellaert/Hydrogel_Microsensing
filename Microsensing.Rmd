@@ -1,0 +1,386 @@
+---
+title: "Microsensing"
+output: html_document
+date: "2024-04-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+```
+
+## First Dataset, 4/10/24
+
+Analyze dataset from 4/10/24, for the gels made on 4/8/24. There is an n = 3 for each thickness, with 3 gels of 200 um thickness ("thin") and 3 gels of 1000 um thickness ("thick"). Three profiles were taken per gel, at a light intensity of PAR" 90 umol/m^2/s and a flow rate of 0.5 cm/s. Three additional profiles were taken per gel in the dark after 20 minutes of dark adaptation. The profiles were taken in the middle of the hydrogel, in the same position for all 6 profiles per gel.
+
+### Plotting profiles
+
+```{r}
+files <- list.files(path = "./Polymerized040824_Measured041024", pattern = "\\.csv$", full.names = TRUE)
+
+plot_list <- list()
+
+for (file in files) {
+  file_name <- tools::file_path_sans_ext(basename(file))
+  
+  file_data <- read_csv(paste(file),show_col_types = FALSE) %>%
+    mutate(Replicate = as.factor(Replicate)) %>%
+    rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`)
+
+  plot <- ggplot(data = file_data, aes(y = `Oxygen (µmol/L)`, x = `Depth (µm)`,
+                                       color = `Condition`, shape = `Replicate`)) + 
+      geom_point() + geom_line() +
+      coord_flip() + scale_x_reverse() + ylim(190, 295) + 
+      theme_bw() + ggtitle(file_name) +
+      annotate("text", x = -1900, y = 295, label = paste("Start:", file_data$Time[1]), vjust = 1, hjust = 1, size = 3) +
+      annotate("text", x = -1800, y = 295, label = paste("End:", file_data$Time[nrow(file_data)]), vjust = 1, hjust = 1, size = 3) +
+    theme(legend.position = "bottom")
+  
+  #print(plot)
+  
+  plot_list[[file_name]] <- plot
+}
+
+arranged_plots <- arrangeGrob(grobs = plot_list, ncol = 3)
+
+gridExtra::grid.arrange(arranged_plots)
+
+ggsave("Polymerized040824_Measured041024_plots.pdf", arranged_plots, width = 16, height = 9, units = "in", device = "pdf")
+```
+
+### Notes about calculating flux
+Wangpraseurt et al 2022: For each profile, the diffusive O2 flux was calculated using Fick’s first law of diffusion as described previously[31] (using a diffusion coefficient of DO2 = 2.2417 × 10−5). The effective DBL thickness δe as the intersection between the extrapolation of the linear part of the O2 slope within the boundary layer that intercepts with the O2 concentration of the bulk medium was calculated.[75]
+
+75 - B. B. Jørgensen, N. P. Revsbech, Limnol. Oceanogr.1985, 30, 111.
+
+31 - D. Wangpraseurt, S. You, F. Azam, G. Jacucci, O. Gaidarenko, M. Hildebrand, M. Kühl, A. G. Smith, M. P. Davey, A. Smith, D. D. Deheyn, S. Chen, S. Vignolini, Nat. Commun. 2020, 11, 1748.
+
+"The diffusive O2 ﬂux was calculated via Fick’s ﬁrst law of diffusion for a water temperature = 25 °C and salinity = 30 using a molecular diffusion coefﬁcient for O2 = 2.255 × 10−5 cm2 s−1(2). Gross photosynthesis was estimated via the light-dark shift method36. A ﬂow chamber set-up provided slow laminar ﬂow (ﬂow rate = 0.5 cm s−1) and a ﬁber-optic halogen lamp (Schott KL2500, Schott, Germany) provided white light at deﬁned levels of incident irradiance (400–700 nm) (0, 110, 220, and 1200 µmol photons m−2 s−1)2. Photosynthesis-irradiance curves were ﬁtted to an exponential function37."
+
+### Attempt to calculate flux
+For the thick ones I am calculating the layer as at -300 
+
+```{r}
+# Get list of files for 1000um gels in the directory
+files <- list.files(path = "./Polymerized040824_Measured041024", pattern = "^Gel040824_1000um_\\d\\.csv$")
+
+# Create an empty dataframe to store results
+
+results_df_1000um <- data.frame(
+  File = character(),
+  Scaffold_Thickness = character(),
+  Replicate = character(),
+  Flux = numeric(),
+  END_DBL = numeric(),
+  Oxygen_Surface = numeric(),
+  Oxygen_End_DBL = numeric()
+)
+
+# Loop over each file
+for (file in files) {
+  # Read the file
+  data <- read_csv(paste0("./Polymerized040824_Measured041024/",file), show_col_types = FALSE) %>%
+    mutate(Replicate = as.factor(Replicate)) %>%
+    rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`)
+  
+  # Loop over each replicate
+  for (replicate in unique(data$Replicate)) {
+    # Filter data for the current replicate and condition
+    oxygen_concentration <- data %>%
+      filter(Replicate == replicate & Condition == "Light", `Depth (µm)` > -350) %>%
+      pull(`Oxygen (µmol/L)`)
+    depth <- data %>%
+      filter(Replicate == replicate & Condition == "Light", `Depth (µm)` > -350) %>%
+      pull(`Depth (µm)`)
+    
+    # Fit a linear regression model to estimate the slope within the diffusive boundary layer
+    boundary_layer_lm <- lm(oxygen_concentration ~ depth)
+    slope <- coef(boundary_layer_lm)[[2]]
+    
+    # Calculate flux using Fick’s first law of diffusion
+    DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
+    flux <- -DO2 * slope
+    
+    # Add the result to the dataframe
+    results_df_1000um <- rbind(
+      results_df_1000um,
+      data.frame(
+        File = file,
+        Scaffold_Thickness = "1000 um",
+        Replicate = replicate,
+        Flux = flux,
+        END_DBL = min(depth),
+        Oxygen_Surface = max(oxygen_concentration),
+        Oxygen_End_DBL = min(oxygen_concentration)
+      )
+    )
+  }
+}
+
+results_df_1000um
+```
+
+For the thinner ones, I am calculating with the boundary later at -400
+
+```{r}
+# Get list of files for 200um gels in the directory
+files <- list.files(path = "./Polymerized040824_Measured041024", pattern = "^Gel040824_200um_\\d\\.csv$")
+
+# Create an empty dataframe to store results
+
+results_df_200um <- data.frame(
+  File = character(),
+  Scaffold_Thickness = character(),
+  Replicate = character(),
+  Flux = numeric(),
+  END_DBL = numeric(),
+  Oxygen_Surface = numeric(),
+  Oxygen_End_DBL = numeric()
+)
+
+# Loop over each file
+for (file in files) {
+  # Read the file
+  data <- read_csv(paste0("./Polymerized040824_Measured041024/",file), show_col_types = FALSE) %>%
+    mutate(Replicate = as.factor(Replicate)) %>%
+    rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`)
+  
+  # Loop over each replicate
+  for (replicate in unique(data$Replicate)) {
+    # Filter data for the current replicate and condition
+    oxygen_concentration <- data %>%
+      filter(Replicate == replicate & Condition == "Light", `Depth (µm)` > -450) %>%
+      pull(`Oxygen (µmol/L)`)
+    depth <- data %>%
+      filter(Replicate == replicate & Condition == "Light", `Depth (µm)` > -450) %>%
+      pull(`Depth (µm)`)
+    
+    # Fit a linear regression model to estimate the slope within the diffusive boundary layer
+    boundary_layer_lm <- lm(oxygen_concentration ~ depth)
+    slope <- coef(boundary_layer_lm)[[2]]
+    
+    # Calculate flux using Fick’s first law of diffusion
+    DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
+    flux <- -DO2 * slope
+    
+    # Add the result to the dataframe
+    results_df_200um <- rbind(
+      results_df_200um,
+      data.frame(
+        File = file,
+        Scaffold_Thickness = "200 um",
+        Replicate = replicate,
+        Flux = flux,
+        END_DBL = min(depth),
+        Oxygen_Surface = max(oxygen_concentration),
+        Oxygen_End_DBL = min(oxygen_concentration)
+      )
+    )
+  }
+}
+
+results_df_200um
+```
+
+### Different attempt
+
+```{r}
+Full_results <- rbind(results_df_1000um, results_df_200um)
+
+Full_results
+
+mean_flux <- Full_results %>%
+  group_by(Scaffold_Thickness) %>%
+  summarize(mean_flux = mean(Flux))
+
+# Plotting the flux values for each thickness
+ggplot(Full_results, aes(x = Scaffold_Thickness, y = Flux)) +
+  geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
+  geom_text(data = mean_flux, aes(label = paste("Mean Flux = \n", sprintf("%.2e", mean_flux)), y = mean_flux-.0000012), vjust = 0.1, position = position_nudge(x = 0.25)) +
+  labs(x = "Thickness (µm)", y = "Flux") +
+  ggtitle("Flux Comparison between Thicknesses")
+
+# Running ANOVA
+anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results)
+summary(anova_result)
+
+# What about for oxygen surface concentration?
+
+mean_Oxygen_Surface <- Full_results %>%
+  group_by(Scaffold_Thickness) %>%
+  summarize(mean_Oxygen_Surface = mean(Oxygen_Surface))
+
+# Plotting the surface O2 values for each thickness
+ggplot(Full_results, aes(x = Scaffold_Thickness, y = Oxygen_Surface)) +
+  geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
+  geom_text(data = mean_Oxygen_Surface, aes(label = paste("Mean Surface Oxygen = \n", round(mean_Oxygen_Surface, 1)), y = mean_Oxygen_Surface-25), vjust = 0.1, position = position_nudge(x = 0.0)) +
+  labs(x = "Thickness (µm)", y = "Oxygen Surface Concentration (µmol/L)") +
+  ggtitle("Oxygen Surface Concentration (µmol/L) Comparison between Thicknesses")
+
+# Running ANOVA
+anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results)
+summary(anova_result)
+```
+
+
+```{r}
+Gel040824_1000um_4 <- read_csv("./Polymerized040824_Measured041024/Gel040824_1000um_4.csv",show_col_types = FALSE) %>%
+    mutate(Replicate = as.factor(Replicate)) %>%
+    rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`)
+
+oxygen_concentration <- Gel040824_1000um_4 %>% filter(Replicate == 1 & Condition == "Light")  %>% pull(`Oxygen (µmol/L)`)  
+depth <- Gel040824_1000um_4 %>% filter(Replicate == 1 & Condition == "Light")  %>% pull(`Depth (µm)`) 
+
+oxygen_concentration
+depth
+
+ggplot(data.frame(depth, oxygen_concentration), aes(x = depth, y = oxygen_concentration)) +
+  geom_point() +
+  geom_smooth() +
+  xlab("Depth (μm)") +
+  ylab("Oxygen (μmol/L)") +
+  ggtitle("Oxygen Concentration Profile")
+
+# Fit an exponential decay model
+exp_decay_model <- nls(oxygen_concentration ~ A * exp(B * depth), 
+                       data = data.frame(depth = depth, oxygen_concentration = oxygen_concentration), 
+                       start = list(A = max(oxygen_concentration), B = -0.001))
+
+# Print summary of the model
+summary(exp_decay_model)
+
+
+# Fit a linear regression model to estimate the slope within the diffusive boundary layer
+boundary_layer_lm <- lm(oxygen_concentration ~ depth)
+
+summary(boundary_layer_lm)
+slope <- coef(boundary_layer_lm)[[2]]
+
+# Calculate flux using Fick’s first law of diffusion
+DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
+flux <- -DO2 * slope
+```
+
+
+## Second Dataset, 4/12/24
+
+Analyze dataset from 4/12/24, for the gels made on 4/10/24. There is an n = 3 for each thickness, with 3 gels of 200 um thickness ("thin") and 3 gels of 1000 um thickness ("thick"). Three profiles were taken per gel, at a light intensity of PAR 90 umol/m^2/s and a flow rate of 0.5 cm/s. Three additional profiles were taken per gel in the dark after 20 minutes of dark adaptation. The profiles were taken in the middle of the hydrogel, in the same position for all 6 profiles per gel. For this dataset, I began taking profiles into the depth of the gel, which is shown in "positive" depths.
+
+### Plotting profiles
+
+```{r}
+files <- list.files(path = "./Polymerized041024_Measured041224", pattern = "\\.csv$", full.names = TRUE)
+
+plot_list <- list()
+
+for (file in files) {
+  file_name <- tools::file_path_sans_ext(basename(file))
+  
+  file_data <- read_csv(paste(file),show_col_types = FALSE) %>%
+    mutate(Replicate = as.factor(Replicate)) %>%
+    rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`) %>% filter(Condition == "Light" | Condition == "Dark")
+  
+  plot <- ggplot(data = file_data, aes(y = `Oxygen (µmol/L)`, x = `Depth (µm)`,
+                                       color = `Condition`, shape = `Replicate`)) + 
+      geom_point() + geom_line() +
+      coord_flip() + scale_x_reverse() + xlim(1000, -1450) + ylim(140, 405) + 
+      geom_vline(xintercept = 0, linetype = 3) + 
+      theme_bw() + ggtitle(file_name) +
+      annotate("text", x = -1400, y = 395, label = paste("Start:", file_data$Time[1]), vjust = 1, hjust = 1, size = 3) +
+      annotate("text", x = -1300, y = 395, label = paste("End:", file_data$Time[nrow(file_data)]), vjust = 1, hjust = 1, size = 3) +
+    theme(legend.position = "bottom")
+  
+  #print(plot)
+  
+  plot_list[[file_name]] <- plot
+}
+
+arranged_plots <- arrangeGrob(grobs = plot_list, ncol = 3)
+
+gridExtra::grid.arrange(arranged_plots)
+
+ggsave("Polymerized041024_Measured041224_plots.pdf", arranged_plots, width = 16, height = 9, units = "in", device = "pdf")
+```
+
+Extra profiles taken not plotted above:
+```{r}
+files <- c("./Polymerized041024_Measured041224/Gel041024_1000um_1.csv", "./Polymerized041024_Measured041224/Gel041024_200um_3.csv")
+
+plot_list <- list()
+
+for (file in files) {
+  file_name <- tools::file_path_sans_ext(basename(file))
+  
+  file_data <- read_csv(paste(file),show_col_types = FALSE) %>%
+    mutate(Replicate = as.factor(Replicate)) %>%
+    rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`) %>% filter(Condition != "Light" & Condition != "Dark")
+
+ plot <- ggplot(data = file_data, aes(y = `Oxygen (µmol/L)`, x = `Depth (µm)`,
+                                       color = `Condition`, shape = `Replicate`)) + 
+      geom_point() + geom_line() +
+      coord_flip() + scale_x_reverse() + xlim(0, -1450) +  
+      geom_vline(xintercept = 0, linetype = 3) + 
+      theme_bw() + ggtitle(file_name) +
+      annotate("text", x = -1400, y = 295, label = paste("Start:", file_data$Time[1]), vjust = 1, hjust = 1, size = 3) +
+      annotate("text", x = -1300, y = 295, label = paste("End:", file_data$Time[nrow(file_data)]), vjust = 1, hjust = 1, size = 3) +
+    theme(legend.position = "bottom")
+  
+  #print(plot)
+  
+  plot_list[[file_name]] <- plot
+}
+
+arranged_plots <- arrangeGrob(grobs = plot_list, ncol = 3)
+
+gridExtra::grid.arrange(arranged_plots)
+
+ggsave("Polymerized041024_Measured041224_plots_extra.pdf", arranged_plots, width = 16, height = 9, units = "in", device = "pdf")
+```
+
+
+## Third Dataset, 4/13/24
+
+Analyze dataset from 4/13/24, for the gels (numbered 1-3) made on 4/08/24. These gels were stressed out using high light (PAR 630 umol/m^2/s) for two hours from 9AM-11AM in the morning in the incubator they were kept in and then held at ambient light (PAR = 90) until profiles were taken. There is an n = 3 for each thickness, with 3 gels of 200 um thickness ("thin") and 3 gels of 1000 um thickness ("thick"). Three profiles were taken per gel, at a light intensity of PAR 90 umol/m^2/s and a flow rate of 0.5 cm/s. Three additional profiles were taken per gel in high light (PAR 630 umol/m^2/s) after 5-10 minutes of adaptation to equilibrium based on the oxygen surface concentration no longer increasing and reaching steady state. The profiles were taken in the middle of the hydrogel, in the same position for all 6 profiles per gel. Profiles were taken partially into the depth of the gel, which is shown in "positive" depths.
+
+
+### Plotting profiles
+
+```{r}
+files <- list.files(path = "./Polymerized040824_Measured041324", pattern = "\\.csv$", full.names = TRUE)
+
+plot_list <- list()
+
+for (file in files) {
+  file_name <- tools::file_path_sans_ext(basename(file))
+  
+  file_data <- read_csv(paste(file),show_col_types = FALSE) %>%
+    mutate(Replicate = as.factor(Replicate)) %>%
+    rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`) #%>% filter(Condition == "Light" | Condition == "Dark")
+  
+  plot <- ggplot(data = file_data, aes(y = `Oxygen (µmol/L)`, x = `Depth (µm)`,
+                                       color = `Condition`, shape = `Replicate`)) + 
+      geom_point() + geom_line() +
+      coord_flip() + scale_x_reverse() + xlim(1000, -1450) + ylim(200, 900) + 
+      geom_vline(xintercept = 0, linetype = 3) + 
+      theme_bw() + ggtitle(file_name) +
+      annotate("text", x = -1400, y = 395, label = paste("Start:", file_data$Time[1]), vjust = 1, hjust = 1, size = 3) +
+      annotate("text", x = -1300, y = 395, label = paste("End:", file_data$Time[nrow(file_data)]), vjust = 1, hjust = 1, size = 3) +
+    theme(legend.position = "bottom")
+  
+  #print(plot)
+  
+  plot_list[[file_name]] <- plot
+}
+
+arranged_plots <- arrangeGrob(grobs = plot_list, ncol = 3)
+
+gridExtra::grid.arrange(arranged_plots)
+
+ggsave("Polymerized040824_Measured041324_plots.pdf", arranged_plots, width = 16, height = 9, units = "in", device = "pdf")
+```
