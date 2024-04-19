@@ -51,182 +51,14 @@ arranged_plots <- arrangeGrob(grobs = plot_list, ncol = 3)
 
 gridExtra::grid.arrange(arranged_plots)
 
-ggsave("Plots/Polymerized040824_Measured041024_plots.pdf", arranged_plots, width = 16, height = 9, units = "in", device = "pdf")
+ggsave("Plots/Polymerized040824_Measured041024_plots.png", arranged_plots, width = 16, height = 9, units = "in", device = "png")
 ```
 
 ### Notes about calculating flux
-Wangpraseurt et al 2022: For each profile, the diffusive O2 flux was calculated using Fick’s first law of diffusion as described previously[31] (using a diffusion coefficient of DO2 = 2.2417 × 10−5). The effective DBL thickness δe as the intersection between the extrapolation of the linear part of the O2 slope within the boundary layer that intercepts with the O2 concentration of the bulk medium was calculated.[75]
 
-75 - B. B. Jørgensen, N. P. Revsbech, Limnol. Oceanogr.1985, 30, 111.
+Wangpraseurt et al 2022: For each profile, the diffusive O2 flux was calculated using Fick’s first law of diffusion as described previously[31] (using a diffusion coefficient of DO2 = **2.2417 × 10−5**). The effective DBL thickness δe as the intersection between the extrapolation of the linear part of the O2 slope within the boundary layer that intercepts with the O2 concentration of the bulk medium was calculated.[75]
 
-31 - D. Wangpraseurt, S. You, F. Azam, G. Jacucci, O. Gaidarenko, M. Hildebrand, M. Kühl, A. G. Smith, M. P. Davey, A. Smith, D. D. Deheyn, S. Chen, S. Vignolini, Nat. Commun. 2020, 11, 1748.
-
-"The diffusive O2 ﬂux was calculated via Fick’s ﬁrst law of diffusion for a water temperature = 25 °C and salinity = 30 using a molecular diffusion coefﬁcient for O2 = 2.255 × 10−5 cm2 s−1(2). Gross photosynthesis was estimated via the light-dark shift method36. A ﬂow chamber set-up provided slow laminar ﬂow (ﬂow rate = 0.5 cm s−1) and a ﬁber-optic halogen lamp (Schott KL2500, Schott, Germany) provided white light at deﬁned levels of incident irradiance (400–700 nm) (0, 110, 220, and 1200 µmol photons m−2 s−1)2. Photosynthesis-irradiance curves were ﬁtted to an exponential function37."
-
-### Attempt to calculate flux
-For the thick ones I am calculating the layer as at -250 
-
-```{r}
-# Get list of files for 1000um gels in the directory
-files <- list.files(path = "./Polymerized040824_Measured041024", pattern = "^Gel040824_1000um_\\d\\.csv$")
-
-# Create an empty dataframe to store results
-
-results_df_1000um <- data.frame(
-  File = character(),
-  Scaffold_Thickness = character(),
-  Replicate = character(),
-  Flux = numeric(),
-  END_DBL = numeric(),
-  Oxygen_Surface = numeric(),
-  Oxygen_End_DBL = numeric()
-)
-
-# Loop over each file
-for (file in files) {
-  # Read the file
-  data <- read_csv(paste0("./Polymerized040824_Measured041024/",file), show_col_types = FALSE) %>%
-    mutate(Replicate = as.factor(Replicate)) %>%
-    rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`)
-  
-  # Loop over each replicate
-  for (replicate in unique(data$Replicate)) {
-    # Filter data for the current replicate and condition
-    oxygen_concentration <- data %>%
-      filter(Replicate == replicate & Condition == "Light", `Depth (µm)` > -300) %>%
-      pull(`Oxygen (µmol/L)`)
-    depth <- data %>%
-      filter(Replicate == replicate & Condition == "Light", `Depth (µm)` > -300) %>%
-      pull(`Depth (µm)`)
-    
-    # Fit a linear regression model to estimate the slope within the diffusive boundary layer
-    boundary_layer_lm <- lm(oxygen_concentration ~ depth)
-    slope <- coef(boundary_layer_lm)[[2]]
-    
-    # Calculate flux using Fick’s first law of diffusion
-    DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- -DO2 * slope
-    
-    # Add the result to the dataframe
-    results_df_1000um <- rbind(
-      results_df_1000um,
-      data.frame(
-        File = file,
-        Scaffold_Thickness = "1000 um",
-        Replicate = replicate,
-        Flux = flux,
-        END_DBL = min(depth),
-        Oxygen_Surface = max(oxygen_concentration),
-        Oxygen_End_DBL = min(oxygen_concentration)
-      )
-    )
-  }
-}
-
-results_df_1000um
-```
-
-For the thinner ones, I am calculating with the boundary later at -400
-
-```{r}
-# Get list of files for 200um gels in the directory
-files <- list.files(path = "./Polymerized040824_Measured041024", pattern = "^Gel040824_200um_\\d\\.csv$")
-
-# Create an empty dataframe to store results
-
-results_df_200um <- data.frame(
-  File = character(),
-  Scaffold_Thickness = character(),
-  Replicate = character(),
-  Flux = numeric(),
-  END_DBL = numeric(),
-  Oxygen_Surface = numeric(),
-  Oxygen_End_DBL = numeric()
-)
-
-# Loop over each file
-for (file in files) {
-  # Read the file
-  data <- read_csv(paste0("./Polymerized040824_Measured041024/",file), show_col_types = FALSE) %>%
-    mutate(Replicate = as.factor(Replicate)) %>%
-    rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`)
-  
-  # Loop over each replicate
-  for (replicate in unique(data$Replicate)) {
-    # Filter data for the current replicate and condition
-    oxygen_concentration <- data %>%
-      filter(Replicate == replicate & Condition == "Light", `Depth (µm)` > -450) %>%
-      pull(`Oxygen (µmol/L)`)
-    depth <- data %>%
-      filter(Replicate == replicate & Condition == "Light", `Depth (µm)` > -450) %>%
-      pull(`Depth (µm)`)
-    
-    # Fit a linear regression model to estimate the slope within the diffusive boundary layer
-    boundary_layer_lm <- lm(oxygen_concentration ~ depth)
-    slope <- coef(boundary_layer_lm)[[2]]
-    
-    # Calculate flux using Fick’s first law of diffusion
-    DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- -DO2 * slope
-    
-    # Add the result to the dataframe
-    results_df_200um <- rbind(
-      results_df_200um,
-      data.frame(
-        File = file,
-        Scaffold_Thickness = "200 um",
-        Replicate = replicate,
-        Flux = flux,
-        END_DBL = min(depth),
-        Oxygen_Surface = max(oxygen_concentration),
-        Oxygen_End_DBL = min(oxygen_concentration)
-      )
-    )
-  }
-}
-
-results_df_200um
-```
-
-### Plotting
-
-```{r}
-Full_results <- rbind(results_df_1000um, results_df_200um)
-
-Full_results
-
-mean_flux <- Full_results %>%
-  group_by(Scaffold_Thickness) %>%
-  summarize(mean_flux = mean(Flux))
-
-# Plotting the flux values for each thickness
-ggplot(Full_results, aes(x = Scaffold_Thickness, y = Flux)) +
-  geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
-  geom_text(data = mean_flux, aes(label = paste("Mean Flux = \n", sprintf("%.2e", mean_flux)), y = mean_flux-.0000012), vjust = 0.1, position = position_nudge(x = 0.25)) +
-  labs(x = "Thickness (µm)", y = "Flux") +
-  ggtitle("Flux Comparison between Thicknesses,\n same volumetric density (4/10/24)")
-
-# Running ANOVA
-anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results)
-summary(anova_result)
-
-# What about for oxygen surface concentration?
-
-mean_Oxygen_Surface <- Full_results %>%
-  group_by(Scaffold_Thickness) %>%
-  summarize(mean_Oxygen_Surface = mean(Oxygen_Surface))
-
-# Plotting the surface O2 values for each thickness
-ggplot(Full_results, aes(x = Scaffold_Thickness, y = Oxygen_Surface)) +
-  geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
-  geom_text(data = mean_Oxygen_Surface, aes(label = paste("Mean Surface Oxygen = \n", round(mean_Oxygen_Surface, 1)), y = mean_Oxygen_Surface-25), vjust = 0.1, position = position_nudge(x = 0.0)) +
-  labs(x = "Thickness (µm)", y = "Oxygen Surface Concentration (µmol/L)") +
-  ggtitle("Oxygen Surface Concentration (µmol/L) Comparison between Thicknesses")
-
-# Running ANOVA
-anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results)
-summary(anova_result)
-```
+Wangpraseurt et al  2020: "The diffusive O2 ﬂux was calculated via Fick’s ﬁrst law of diffusion for a water temperature = 25 °C and salinity = 30 using a molecular diffusion coefﬁcient for O2 = 2.255 × 10−5 cm2 s−1(2). Gross photosynthesis was estimated via the light-dark shift method36. A ﬂow chamber set-up provided slow laminar ﬂow (ﬂow rate = 0.5 cm s−1) and a ﬁber-optic halogen lamp (Schott KL2500, Schott, Germany) provided white light at deﬁned levels of incident irradiance (400–700 nm) (0, 110, 220, and 1200 µmol photons m−2 s−1)2. Photosynthesis-irradiance curves were ﬁtted to an exponential function37."
 
 ### Using segmented linear regression, segmented R package
 
@@ -317,7 +149,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- -DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope
         
     # Store results in dataframe
     results_df_1000um_segmented <- bind_rows(results_df_1000um_segmented, data.frame(
@@ -336,8 +168,6 @@ for (file_path in file_list) {
 
 # Print the results dataframe
 print(results_df_1000um_segmented)
-
-print(results_df_1000um)
 ```
 
 
@@ -426,7 +256,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- -DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope
         
     # Store results in dataframe
     results_df_200um_segmented <- bind_rows(results_df_200um_segmented, data.frame(
@@ -445,9 +275,9 @@ for (file_path in file_list) {
 
 # Print the results dataframe
 print(results_df_200um_segmented)
-
-print(results_df_200um)
 ```
+
+### Stats
 
 ```{r}
 Full_results_segmented <- rbind(results_df_1000um_segmented, results_df_200um_segmented)
@@ -463,11 +293,11 @@ flux_plot <- ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = Flux
   geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
   geom_text(data = mean_flux, aes(label = paste("Mean Flux = \n", sprintf("%.2e", mean_flux)), y = mean_flux-.000002), vjust = 0.1, position = position_nudge(x = 0.25)) +
   labs(x = "Thickness (µm)", y = "Flux") +
-  ggtitle("Flux Comparison between Thicknesses,\n same volumetric density (4/10/24)\n Segmented Regression")
+  ggtitle("Flux Comparison between Thicknesses,\n same volumetric density (4/10/24)")
 
 flux_plot
 
-ggsave("Plots/Polymerized040824_Measured041024_Flux_plot.pdf", flux_plot, device = "pdf")
+ggsave("Plots/Polymerized040824_Measured041024_Flux_plot.png", flux_plot, device = "png")
 
 # Running ANOVA
 anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results_segmented)
@@ -488,6 +318,23 @@ ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = Oxygen_Surface)) 
 
 # Running ANOVA
 anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results_segmented)
+summary(anova_result)
+
+# What about DBL Thickness?
+
+mean_DBL_end <- Full_results_segmented %>%
+  group_by(Scaffold_Thickness) %>%
+  summarize(mean_DBL_end = mean(Breakpoint))
+
+# Plotting the DBL Thickness for each scaffold thickness
+ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = -Breakpoint)) +
+  geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
+  geom_text(data = mean_DBL_end, aes(label = paste("Mean DBL Thickness = \n", round(-mean_DBL_end, 1)), y = -mean_DBL_end-65), vjust = 0.1, position = position_nudge(x = 0.0)) +
+  labs(x = "Thickness (µm)", y = "DBL Thickness (µm)") +
+  ggtitle("DBL Thickness (µm) Comparison between Thicknesses")
+
+# Running ANOVA
+anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented)
 summary(anova_result)
 ```
 
@@ -528,7 +375,7 @@ arranged_plots <- arrangeGrob(grobs = plot_list, ncol = 3)
 
 gridExtra::grid.arrange(arranged_plots)
 
-ggsave("Plots/Polymerized040824_Measured041024_plots_DBL.pdf", arranged_plots, width = 16, height = 9, units = "in", device = "pdf")
+ggsave("Plots/Polymerized040824_Measured041024_plots_DBL.png", arranged_plots, width = 16, height = 9, units = "in", device = "png")
 ```
 
 ## Second Dataset, 4/12/24
@@ -568,7 +415,41 @@ arranged_plots <- arrangeGrob(grobs = plot_list, ncol = 3)
 
 gridExtra::grid.arrange(arranged_plots)
 
-ggsave("Plots/Polymerized041024_Measured041224_plots.pdf", arranged_plots, width = 16, height = 9, units = "in", device = "pdf")
+ggsave("Plots/Polymerized041024_Measured041224_plots.png", arranged_plots, width = 16, height = 9, units = "in", device = "png")
+```
+
+```{r}
+files <- list.files(path = "./Polymerized041024_Measured041224", pattern = "\\.csv$", full.names = TRUE)
+
+plot_list <- list()
+
+for (file in files) {
+  file_name <- tools::file_path_sans_ext(basename(file))
+   
+  file_data <- read_csv(paste(file),show_col_types = FALSE) %>%
+    mutate(Replicate = as.factor(Replicate)) %>%
+    rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`) %>% filter(Condition == "Light" | Condition == "Dark")
+  
+  # Determine the x-limits and color for the rectangle based on the file name
+  if (grepl("1000", file_name)) {
+    rect_x <- c(0, 1000)
+  } else {
+    rect_x <- c(0, 200)
+  }
+  
+  plot <- ggplot(data = file_data, aes(y = `Oxygen (µmol/L)`, x = `Depth (µm)`,
+                                       color = `Condition`, shape = `Replicate`)) + 
+      geom_rect(aes(xmin = rect_x[1], xmax = rect_x[2], ymin = -Inf, ymax = Inf), fill = "tan", color = "tan", alpha = 0.5) +
+      geom_point() + geom_line() +
+      coord_flip() + scale_x_reverse() + xlim(1001, -1450) + ylim(140, 405) + 
+      geom_vline(xintercept = 0, linetype = 3) + 
+      theme_bw() + ggtitle(file_name) +
+      annotate("text", x = -1400, y = 395, label = paste("Start:", file_data$Time[1]), vjust = 1, hjust = 1, size = 3) +
+      annotate("text", x = -1300, y = 395, label = paste("End:", file_data$Time[nrow(file_data)]), vjust = 1, hjust = 1, size = 3) +
+    theme(legend.position = "bottom")
+  
+  print(plot)
+}
 ```
 
 Extra profiles taken not plotted above:
@@ -603,7 +484,7 @@ arranged_plots <- arrangeGrob(grobs = plot_list, ncol = 3)
 
 gridExtra::grid.arrange(arranged_plots)
 
-ggsave("Plots/Polymerized041024_Measured041224_plots_extra.pdf", arranged_plots, width = 16, height = 9, units = "in", device = "pdf")
+ggsave("Plots/Polymerized041024_Measured041224_plots_extra.png", arranged_plots, width = 16, height = 9, units = "in", device = "png")
 ```
 
 ### Using segmented linear regression, segmented R package
@@ -696,7 +577,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- -DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope
         
     # Store results in dataframe
     results_df_1000um_segmented <- bind_rows(results_df_1000um_segmented, data.frame(
@@ -763,7 +644,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- -DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope
         
     # Store results in dataframe
     results_df_200um_segmented <- bind_rows(results_df_200um_segmented, data.frame(
@@ -784,6 +665,7 @@ for (file_path in file_list) {
 print(results_df_200um_segmented)
 ```
 
+### Stats
 
 ```{r}
 Full_results_segmented <- rbind(results_df_1000um_segmented, results_df_200um_segmented)
@@ -803,7 +685,7 @@ flux_plot <- ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = Flux
 
 flux_plot
 
-ggsave("Plots/Polymerized041024_Measured041224_Flux_plot.pdf", flux_plot, device = "pdf")
+ggsave("Plots/Polymerized041024_Measured041224_Flux_plot.png", flux_plot, device = "png")
 
 # Running ANOVA
 anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results_segmented)
@@ -824,6 +706,23 @@ ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = Oxygen_Surface)) 
 
 # Running ANOVA
 anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results_segmented)
+summary(anova_result)
+
+# What about DBL Thickness?
+
+mean_DBL_end <- Full_results_segmented %>%
+  group_by(Scaffold_Thickness) %>%
+  summarize(mean_DBL_end = mean(Breakpoint))
+
+# Plotting the DBL Thickness for each scaffold thickness
+ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = -Breakpoint)) +
+  geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
+  geom_text(data = mean_DBL_end, aes(label = paste("Mean DBL Thickness = \n", round(-mean_DBL_end, 1)), y = -mean_DBL_end-65), vjust = 0.1, position = position_nudge(x = 0.0)) +
+  labs(x = "Thickness (µm)", y = "DBL Thickness (µm)") +
+  ggtitle("DBL Thickness (µm) Comparison between Thicknesses")
+
+# Running ANOVA
+anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented)
 summary(anova_result)
 ```
 
@@ -863,7 +762,7 @@ arranged_plots <- arrangeGrob(grobs = plot_list, ncol = 3)
 
 gridExtra::grid.arrange(arranged_plots)
 
-ggsave("Plots/Polymerized041024_Measured041224_plots_DBL.pdf", arranged_plots, width = 16, height = 9, units = "in", device = "pdf")
+ggsave("Plots/Polymerized041024_Measured041224_plots_DBL.png", arranged_plots, width = 16, height = 9, units = "in", device = "png")
 ```
 
 ## Third Dataset, 4/13/24
@@ -904,10 +803,42 @@ arranged_plots <- arrangeGrob(grobs = plot_list, ncol = 3)
 
 gridExtra::grid.arrange(arranged_plots)
 
-ggsave("Plots/Polymerized040824_Measured041324_plots.pdf", arranged_plots, width = 16, height = 9, units = "in", device = "pdf")
+ggsave("Plots/Polymerized040824_Measured041324_plots.png", arranged_plots, width = 16, height = 9, units = "in", device = "png")
 ```
 
+```{r}
+files <- list.files(path = "./Polymerized040824_Measured041324", pattern = "\\.csv$", full.names = TRUE)
 
+plot_list <- list()
+
+for (file in files) {
+  file_name <- tools::file_path_sans_ext(basename(file))
+   
+  file_data <- read_csv(paste(file),show_col_types = FALSE) %>%
+    mutate(Replicate = as.factor(Replicate)) %>%
+    rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`) #%>% filter(Condition == "Light" | Condition == "Dark")
+  
+  # Determine the x-limits and color for the rectangle based on the file name
+  if (grepl("1000", file_name)) {
+    rect_x <- c(0, 1000)
+  } else {
+    rect_x <- c(0, 200)
+  }
+  
+  plot <- ggplot(data = file_data, aes(y = `Oxygen (µmol/L)`, x = `Depth (µm)`,
+                                       color = `Condition`, shape = `Replicate`)) + 
+      geom_rect(aes(xmin = rect_x[1], xmax = rect_x[2], ymin = -Inf, ymax = Inf), fill = "tan", color = "tan", alpha = 0.5) +
+      geom_point() + geom_line() +
+      coord_flip() + scale_x_reverse() + xlim(1001, -1450) + ylim(200, 900) + 
+      geom_vline(xintercept = 0, linetype = 3) + 
+      theme_bw() + ggtitle(file_name) +
+      annotate("text", x = -1400, y = 395, label = paste("Start:", file_data$Time[1]), vjust = 1, hjust = 1, size = 3) +
+      annotate("text", x = -1300, y = 395, label = paste("End:", file_data$Time[nrow(file_data)]), vjust = 1, hjust = 1, size = 3) +
+    theme(legend.position = "bottom")
+  
+  print(plot)
+}
+```
 
 ### Using segmented linear regression, segmented R package
 
@@ -999,7 +930,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- -DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope
         
     # Store results in dataframe
     results_df_1000um_segmented <- bind_rows(results_df_1000um_segmented, data.frame(
@@ -1066,7 +997,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- -DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope
         
     # Store results in dataframe
     results_df_200um_segmented <- bind_rows(results_df_200um_segmented, data.frame(
@@ -1087,6 +1018,7 @@ for (file_path in file_list) {
 print(results_df_200um_segmented)
 ```
 
+### Stats
 
 ```{r}
 Full_results_segmented <- rbind(results_df_1000um_segmented, results_df_200um_segmented)
@@ -1106,7 +1038,7 @@ flux_plot <- ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = Flux
 
 flux_plot
 
-ggsave("Plots/Polymerized040824_Measured041324_Flux_plot.pdf", flux_plot, device = "pdf")
+ggsave("Plots/Polymerized040824_Measured041324_Flux_plot.png", flux_plot, device = "png")
 
 
 # Running ANOVA
@@ -1128,6 +1060,23 @@ ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = Oxygen_Surface)) 
 
 # Running ANOVA
 anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results_segmented)
+summary(anova_result)
+
+# What about DBL Thickness?
+
+mean_DBL_end <- Full_results_segmented %>%
+  group_by(Scaffold_Thickness) %>%
+  summarize(mean_DBL_end = mean(Breakpoint))
+
+# Plotting the DBL Thickness for each scaffold thickness
+ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = -Breakpoint)) +
+  geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
+  geom_text(data = mean_DBL_end, aes(label = paste("Mean DBL Thickness = \n", round(-mean_DBL_end, 1)), y = -mean_DBL_end-65), vjust = 0.1, position = position_nudge(x = 0.0)) +
+  labs(x = "Thickness (µm)", y = "DBL Thickness (µm)") +
+  ggtitle("DBL Thickness (µm) Comparison between Thicknesses")
+
+# Running ANOVA
+anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented)
 summary(anova_result)
 ```
 
@@ -1168,5 +1117,5 @@ arranged_plots <- arrangeGrob(grobs = plot_list, ncol = 3)
 
 gridExtra::grid.arrange(arranged_plots)
 
-ggsave("Plots/Polymerized040824_Measured041324_plots_DBL.pdf", arranged_plots, width = 16, height = 9, units = "in", device = "pdf")
+ggsave("Plots/Polymerized040824_Measured041324_plots_DBL.png", arranged_plots, width = 16, height = 9, units = "in", device = "png")
 ```
