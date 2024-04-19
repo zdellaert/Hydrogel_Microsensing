@@ -1133,6 +1133,9 @@ Full_results_segmented_041224$polymerization_date <- "041024"
 Full_results_segmented_041324$date <- "041324"
 Full_results_segmented_041324$polymerization_date <- "040824"
 
+# ones polymerized on 040824 have the same volumetric density of algae (1000um scaffold should have 5x amount of algae as 200um scaffold)
+# ones polymerized on 041024 have the same area density of algae (1000um scaffold should have same amount of algae as 200um scaffold)
+
 # Combine the dataframes
 Full_results_segmented <- rbind(Full_results_segmented_041024, 
                                 Full_results_segmented_041224, 
