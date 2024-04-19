@@ -280,16 +280,16 @@ print(results_df_200um_segmented)
 ### Stats
 
 ```{r}
-Full_results_segmented <- rbind(results_df_1000um_segmented, results_df_200um_segmented)
+Full_results_segmented_041024 <- rbind(results_df_1000um_segmented, results_df_200um_segmented)
 
-Full_results_segmented
+Full_results_segmented_041024
 
-mean_flux <- Full_results_segmented %>%
+mean_flux <- Full_results_segmented_041024 %>%
   group_by(Scaffold_Thickness) %>%
   summarize(mean_flux = mean(Flux))
 
 # Plotting the flux values for each thickness
-flux_plot <- ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = Flux)) +
+flux_plot <- ggplot(Full_results_segmented_041024, aes(x = Scaffold_Thickness, y = Flux)) +
   geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
   geom_text(data = mean_flux, aes(label = paste("Mean Flux = \n", sprintf("%.2e", mean_flux)), y = mean_flux-.000002), vjust = 0.1, position = position_nudge(x = 0.25)) +
   labs(x = "Thickness (µm)", y = "Flux") +
@@ -300,41 +300,41 @@ flux_plot
 ggsave("Plots/Polymerized040824_Measured041024_Flux_plot.png", flux_plot, device = "png")
 
 # Running ANOVA
-anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results_segmented)
+anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results_segmented_041024)
 summary(anova_result)
 
 # What about for oxygen surface concentration?
 
-mean_Oxygen_Surface <- Full_results_segmented %>%
+mean_Oxygen_Surface <- Full_results_segmented_041024 %>%
   group_by(Scaffold_Thickness) %>%
   summarize(mean_Oxygen_Surface = mean(Oxygen_Surface))
 
 # Plotting the surface O2 values for each thickness
-ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = Oxygen_Surface)) +
+ggplot(Full_results_segmented_041024, aes(x = Scaffold_Thickness, y = Oxygen_Surface)) +
   geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
   geom_text(data = mean_Oxygen_Surface, aes(label = paste("Mean Surface Oxygen = \n", round(mean_Oxygen_Surface, 1)), y = mean_Oxygen_Surface-25), vjust = 0.1, position = position_nudge(x = 0.0)) +
   labs(x = "Thickness (µm)", y = "Oxygen Surface Concentration (µmol/L)") +
   ggtitle("Oxygen Surface Concentration (µmol/L) Comparison between Thicknesses")
 
 # Running ANOVA
-anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results_segmented)
+anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results_segmented_041024)
 summary(anova_result)
 
 # What about DBL Thickness?
 
-mean_DBL_end <- Full_results_segmented %>%
+mean_DBL_end <- Full_results_segmented_041024 %>%
   group_by(Scaffold_Thickness) %>%
   summarize(mean_DBL_end = mean(Breakpoint))
 
 # Plotting the DBL Thickness for each scaffold thickness
-ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = -Breakpoint)) +
+ggplot(Full_results_segmented_041024, aes(x = Scaffold_Thickness, y = -Breakpoint)) +
   geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
   geom_text(data = mean_DBL_end, aes(label = paste("Mean DBL Thickness = \n", round(-mean_DBL_end, 1)), y = -mean_DBL_end-65), vjust = 0.1, position = position_nudge(x = 0.0)) +
   labs(x = "Thickness (µm)", y = "DBL Thickness (µm)") +
   ggtitle("DBL Thickness (µm) Comparison between Thicknesses")
 
 # Running ANOVA
-anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented)
+anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented_041024)
 summary(anova_result)
 ```
 
@@ -354,7 +354,7 @@ for (file in files) {
     rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`)
   
   # Extract the DBL depth for the current file
-  dbl_depth <- Full_results_segmented$Breakpoint[gsub("\\.csv$", "", Full_results_segmented$File) == file_name]
+  dbl_depth <- Full_results_segmented_041024$Breakpoint[gsub("\\.csv$", "", Full_results_segmented_041024$File) == file_name]
 
   plot <- ggplot(data = file_data, aes(y = `Oxygen (µmol/L)`, x = `Depth (µm)`,
                                        color = `Condition`, shape = `Replicate`)) + 
@@ -668,16 +668,16 @@ print(results_df_200um_segmented)
 ### Stats
 
 ```{r}
-Full_results_segmented <- rbind(results_df_1000um_segmented, results_df_200um_segmented)
+Full_results_segmented_041224 <- rbind(results_df_1000um_segmented, results_df_200um_segmented)
 
-Full_results_segmented
+Full_results_segmented_041224
 
-mean_flux <- Full_results_segmented %>%
+mean_flux <- Full_results_segmented_041224 %>%
   group_by(Scaffold_Thickness) %>%
   summarize(mean_flux = mean(Flux))
 
 # Plotting the flux values for each thickness
-flux_plot <- ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = Flux)) +
+flux_plot <- ggplot(Full_results_segmented_041224, aes(x = Scaffold_Thickness, y = Flux)) +
   geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
   geom_text(data = mean_flux, aes(label = paste("Mean Flux = \n", sprintf("%.2e", mean_flux)), y = mean_flux-.000002), vjust = 0.1, position = position_nudge(x = 0.25)) +
   labs(x = "Thickness (µm)", y = "Flux") +
@@ -688,41 +688,41 @@ flux_plot
 ggsave("Plots/Polymerized041024_Measured041224_Flux_plot.png", flux_plot, device = "png")
 
 # Running ANOVA
-anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results_segmented)
+anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results_segmented_041224)
 summary(anova_result)
 
 # What about for oxygen surface concentration?
 
-mean_Oxygen_Surface <- Full_results_segmented %>%
+mean_Oxygen_Surface <- Full_results_segmented_041224 %>%
   group_by(Scaffold_Thickness) %>%
   summarize(mean_Oxygen_Surface = mean(Oxygen_Surface))
 
 # Plotting the surface O2 values for each thickness
-ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = Oxygen_Surface)) +
+ggplot(Full_results_segmented_041224, aes(x = Scaffold_Thickness, y = Oxygen_Surface)) +
   geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
   geom_text(data = mean_Oxygen_Surface, aes(label = paste("Mean Surface Oxygen = \n", round(mean_Oxygen_Surface, 1)), y = mean_Oxygen_Surface-25), vjust = 0.1, position = position_nudge(x = 0.0)) +
   labs(x = "Thickness (µm)", y = "Oxygen Surface Concentration (µmol/L)") +
   ggtitle("Oxygen Surface Concentration (µmol/L) Comparison between Thicknesses")
 
 # Running ANOVA
-anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results_segmented)
+anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results_segmented_041224)
 summary(anova_result)
 
 # What about DBL Thickness?
 
-mean_DBL_end <- Full_results_segmented %>%
+mean_DBL_end <- Full_results_segmented_041224 %>%
   group_by(Scaffold_Thickness) %>%
   summarize(mean_DBL_end = mean(Breakpoint))
 
 # Plotting the DBL Thickness for each scaffold thickness
-ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = -Breakpoint)) +
+ggplot(Full_results_segmented_041224, aes(x = Scaffold_Thickness, y = -Breakpoint)) +
   geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
   geom_text(data = mean_DBL_end, aes(label = paste("Mean DBL Thickness = \n", round(-mean_DBL_end, 1)), y = -mean_DBL_end-65), vjust = 0.1, position = position_nudge(x = 0.0)) +
   labs(x = "Thickness (µm)", y = "DBL Thickness (µm)") +
   ggtitle("DBL Thickness (µm) Comparison between Thicknesses")
 
 # Running ANOVA
-anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented)
+anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented_041224)
 summary(anova_result)
 ```
 
@@ -741,7 +741,7 @@ for (file in files) {
     rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`) %>% filter(Condition == "Light" | Condition == "Dark")
   
   # Extract the DBL depth for the current file
-  dbl_depth <- Full_results_segmented$Breakpoint[gsub("\\.csv$", "", Full_results_segmented$File) == file_name]
+  dbl_depth <- Full_results_segmented_041224$Breakpoint[gsub("\\.csv$", "", Full_results_segmented_041224$File) == file_name]
 
   plot <- ggplot(data = file_data, aes(y = `Oxygen (µmol/L)`, x = `Depth (µm)`,
                                        color = `Condition`, shape = `Replicate`)) + 
@@ -1021,16 +1021,16 @@ print(results_df_200um_segmented)
 ### Stats
 
 ```{r}
-Full_results_segmented <- rbind(results_df_1000um_segmented, results_df_200um_segmented)
+Full_results_segmented_041324 <- rbind(results_df_1000um_segmented, results_df_200um_segmented)
 
-Full_results_segmented
+Full_results_segmented_041324
 
-mean_flux <- Full_results_segmented %>%
+mean_flux <- Full_results_segmented_041324 %>%
   group_by(Scaffold_Thickness) %>%
   summarize(mean_flux = mean(Flux))
 
 # Plotting the flux values for each thickness
-flux_plot <- ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = Flux)) +
+flux_plot <- ggplot(Full_results_segmented_041324, aes(x = Scaffold_Thickness, y = Flux)) +
   geom_boxplot() + geom_point(aes(color = File,shape = Replicate), position = position_jitter(width = 0.05)) + 
   geom_text(data = mean_flux, aes(label = paste("Mean Flux = \n", sprintf("%.2e", mean_flux)), y = mean_flux-.000002), vjust = 0.1, position = position_nudge(x = 0.25)) +
   labs(x = "Thickness (µm)", y = "Flux") +
@@ -1042,41 +1042,41 @@ ggsave("Plots/Polymerized040824_Measured041324_Flux_plot.png", flux_plot, device
 
 
 # Running ANOVA
-anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results_segmented)
+anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results_segmented_041324)
 summary(anova_result)
 
 # What about for oxygen surface concentration?
 
-mean_Oxygen_Surface <- Full_results_segmented %>%
+mean_Oxygen_Surface <- Full_results_segmented_041324 %>%
   group_by(Scaffold_Thickness) %>%
   summarize(mean_Oxygen_Surface = mean(Oxygen_Surface))
 
 # Plotting the surface O2 values for each thickness
-ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = Oxygen_Surface)) +
+ggplot(Full_results_segmented_041324, aes(x = Scaffold_Thickness, y = Oxygen_Surface)) +
   geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
   geom_text(data = mean_Oxygen_Surface, aes(label = paste("Mean Surface Oxygen = \n", round(mean_Oxygen_Surface, 1)), y = mean_Oxygen_Surface-25), vjust = 0.1, position = position_nudge(x = 0.0)) +
   labs(x = "Thickness (µm)", y = "Oxygen Surface Concentration (µmol/L)") +
   ggtitle("Oxygen Surface Concentration (µmol/L) Comparison between Thicknesses")
 
 # Running ANOVA
-anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results_segmented)
+anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results_segmented_041324)
 summary(anova_result)
 
 # What about DBL Thickness?
 
-mean_DBL_end <- Full_results_segmented %>%
+mean_DBL_end <- Full_results_segmented_041324 %>%
   group_by(Scaffold_Thickness) %>%
   summarize(mean_DBL_end = mean(Breakpoint))
 
 # Plotting the DBL Thickness for each scaffold thickness
-ggplot(Full_results_segmented, aes(x = Scaffold_Thickness, y = -Breakpoint)) +
+ggplot(Full_results_segmented_041324, aes(x = Scaffold_Thickness, y = -Breakpoint)) +
   geom_boxplot() + geom_point(aes(color = File), position = position_jitter(width = 0.05)) + 
   geom_text(data = mean_DBL_end, aes(label = paste("Mean DBL Thickness = \n", round(-mean_DBL_end, 1)), y = -mean_DBL_end-65), vjust = 0.1, position = position_nudge(x = 0.0)) +
   labs(x = "Thickness (µm)", y = "DBL Thickness (µm)") +
   ggtitle("DBL Thickness (µm) Comparison between Thicknesses")
 
 # Running ANOVA
-anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented)
+anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented_041324)
 summary(anova_result)
 ```
 
@@ -1096,7 +1096,7 @@ for (file in files) {
     rename("Oxygen (µmol/L)" = `A FireSting Ch1 (µmol/L)`) %>% filter(Condition == "Light" | Condition == "Dark")
   
   # Extract the DBL depth for the current file
-  dbl_depth <- Full_results_segmented$Breakpoint[gsub("\\.csv$", "", Full_results_segmented$File) == file_name]
+  dbl_depth <- Full_results_segmented_041324$Breakpoint[gsub("\\.csv$", "", Full_results_segmented_041324$File) == file_name]
 
   plot <- ggplot(data = file_data, aes(y = `Oxygen (µmol/L)`, x = `Depth (µm)`,
                                        color = `Condition`, shape = `Replicate`)) + 
@@ -1118,4 +1118,87 @@ arranged_plots <- arrangeGrob(grobs = plot_list, ncol = 3)
 gridExtra::grid.arrange(arranged_plots)
 
 ggsave("Plots/Polymerized040824_Measured041324_plots_DBL.png", arranged_plots, width = 16, height = 9, units = "in", device = "png")
+```
+
+
+## Combine all three datasets
+
+
+```{r}
+# Add a column indicating the date for each dataframe
+Full_results_segmented_041024$date <- "041024"
+Full_results_segmented_041024$polymerization_date <- "040824"
+Full_results_segmented_041224$date <- "041224"
+Full_results_segmented_041224$polymerization_date <- "041024"
+Full_results_segmented_041324$date <- "041324"
+Full_results_segmented_041324$polymerization_date <- "040824"
+
+# Combine the dataframes
+Full_results_segmented <- rbind(Full_results_segmented_041024, 
+                                Full_results_segmented_041224, 
+                                Full_results_segmented_041324)
+Full_results_segmented
+
+mean_flux <- Full_results_segmented %>%
+  group_by(Scaffold_Thickness, date) %>%
+  summarize(mean_flux = mean(Flux))
+
+# Plotting the flux values for each thickness
+flux_plot <- ggplot(Full_results_segmented, aes(x = date, y = Flux, group = interaction(Scaffold_Thickness, date), color = Scaffold_Thickness)) +
+  geom_boxplot() + geom_point(position = position_dodge(width = 0.75)) + 
+  #geom_text(data = mean_flux, aes(label = paste("Mean Flux = \n", sprintf("%.2e", mean_flux)), y = mean_flux-.000002), vjust = 0.1, position = position_nudge(x = 0.25)) +
+  labs(x = "Measurement Date", y = "Flux") +
+  ggtitle("Flux Comparison between Thicknesses and Dates")
+
+flux_plot
+
+ggsave("Plots/Flux_plot.png", flux_plot, device = "png")
+
+
+# Running ANOVA
+anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results_segmented)
+summary(anova_result)
+
+# What about for oxygen surface concentration?
+
+mean_Oxygen_Surface <- Full_results_segmented %>%
+  group_by(Scaffold_Thickness, date) %>%
+  summarize(mean_Oxygen_Surface = mean(Oxygen_Surface))
+
+# Plotting the surface O2 values for each thickness
+O2_plot <- ggplot(Full_results_segmented, aes(x = date, y = Oxygen_Surface, group = interaction(Scaffold_Thickness, date), color = Scaffold_Thickness)) +
+  geom_boxplot() + geom_point(position = position_dodge(width = 0.75)) + 
+  #geom_text(data = mean_Oxygen_Surface, aes(label = paste("Mean Surface Oxygen = \n", round(mean_Oxygen_Surface, 1)), y = mean_Oxygen_Surface-25), vjust = 0.1, position = position_nudge(x = 0.0)) +
+  labs(x = "Measurement Date", y = "Oxygen Surface Concentration (µmol/L)") +
+  ggtitle("Oxygen Surface Concentration (µmol/L) Comparison between Thicknesses and Dates")
+
+O2_plot
+
+ggsave("Plots/O2_plot.png", O2_plot, device = "png")
+
+# Running ANOVA
+anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results_segmented)
+summary(anova_result)
+
+# What about DBL Thickness?
+
+mean_DBL_end <- Full_results_segmented %>%
+  group_by(Scaffold_Thickness, date) %>%
+  summarize(mean_DBL_end = mean(Breakpoint))
+
+# Plotting the DBL Thickness for each scaffold thickness
+DBL_plot <- ggplot(Full_results_segmented, aes(x = date, y = -Breakpoint, group = interaction(Scaffold_Thickness, date), color = Scaffold_Thickness)) +
+  geom_boxplot() + geom_point(position = position_dodge(width = 0.75)) + 
+  #geom_text(data = mean_DBL_end, aes(label = paste("Mean DBL Thickness = \n", round(-mean_DBL_end, 1)), y = -mean_DBL_end-65), vjust = 0.1, position = position_nudge(x = 0.0)) +
+  labs(x = "Measurement Date)", y = "DBL Thickness (µm)") +
+  ggtitle("DBL Thickness (µm) Comparison between Thicknesses and Dates")
+
+DBL_plot
+
+ggsave("Plots/DBL_plot.png", DBL_plot, device = "png")
+
+
+# Running ANOVA
+anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented)
+summary(anova_result)
 ```
