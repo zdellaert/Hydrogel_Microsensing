@@ -293,6 +293,10 @@ mean_flux <- Full_results_segmented_041024 %>%
 anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results_segmented_041024)
 summary(anova_result)
 
+# Running ANOVA accounting for variation between the different gels ("File")
+anova_result <- aov(Flux ~ Scaffold_Thickness + File, data = Full_results_segmented_041024)
+summary(anova_result)
+
 # What about for oxygen surface concentration?
 
 mean_Oxygen_Surface <- Full_results_segmented_041024 %>%
@@ -304,6 +308,10 @@ mean_Oxygen_Surface <- Full_results_segmented_041024 %>%
 anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results_segmented_041024)
 summary(anova_result)
 
+# Running ANOVA accounting for variation between the different gels ("File")
+anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness + File, data = Full_results_segmented_041024)
+summary(anova_result)
+
 # What about DBL Thickness?
 
 mean_DBL_end <- Full_results_segmented_041024 %>%
@@ -313,6 +321,10 @@ mean_DBL_end <- Full_results_segmented_041024 %>%
 
 # Running ANOVA
 anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented_041024)
+summary(anova_result)
+
+# Running ANOVA accounting for variation between the different gels ("File")
+anova_result <- aov(Breakpoint ~ Scaffold_Thickness + File, data = Full_results_segmented_041024)
 summary(anova_result)
 ```
 
@@ -702,6 +714,10 @@ mean_flux <- Full_results_segmented_041224 %>%
 anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results_segmented_041224)
 summary(anova_result)
 
+# Running ANOVA accounting for variation between the different gels ("File")
+anova_result <- aov(Flux ~ Scaffold_Thickness + File, data = Full_results_segmented_041224)
+summary(anova_result)
+
 # What about for oxygen surface concentration?
 
 mean_Oxygen_Surface <- Full_results_segmented_041224 %>%
@@ -713,6 +729,10 @@ mean_Oxygen_Surface <- Full_results_segmented_041224 %>%
 anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results_segmented_041224)
 summary(anova_result)
 
+# Running ANOVA accounting for variation between the different gels ("File")
+anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness + File, data = Full_results_segmented_041224)
+summary(anova_result)
+
 # What about DBL Thickness?
 
 mean_DBL_end <- Full_results_segmented_041224 %>%
@@ -722,6 +742,10 @@ mean_DBL_end <- Full_results_segmented_041224 %>%
 
 # Running ANOVA
 anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented_041224)
+summary(anova_result)
+
+# Running ANOVA accounting for variation between the different gels ("File")
+anova_result <- aov(Breakpoint ~ Scaffold_Thickness + File, data = Full_results_segmented_041224)
 summary(anova_result)
 ```
 
@@ -736,7 +760,7 @@ flux_plot <- ggplot(Full_results_segmented_041224, aes(x = Scaffold_Thickness, y
   geom_text(data = mean_flux, aes(label = paste("Mean Flux =\n", sprintf("%.2e", mean_flux)),
                                   y = min-.0000005), vjust = 0.1, position = position_nudge(x = 0.0)) +
   labs(x = "Thickness (µm)", y = "Flux") + theme_bw()
-
+# 
 # Plotting the surface O2 values for each thickness
 oxygen_surface_plot <- ggplot(Full_results_segmented_041224, aes(x = Scaffold_Thickness, y = Oxygen_Surface)) +
   geom_boxplot() + geom_point(aes(color = File), show.legend = FALSE, position = position_jitter(width = 0.05)) + 
@@ -1213,6 +1237,10 @@ mean_flux <- Full_results_segmented_041324 %>%
 anova_result <- aov(Flux ~ Scaffold_Thickness, data = Full_results_segmented_041324)
 summary(anova_result)
 
+# Running ANOVA accounting for variation between the different gels ("File")
+anova_result <- aov(Flux ~ Scaffold_Thickness + File, data = Full_results_segmented_041324)
+summary(anova_result)
+
 # What about for oxygen surface concentration?
 
 mean_Oxygen_Surface <- Full_results_segmented_041324 %>%
@@ -1222,6 +1250,10 @@ mean_Oxygen_Surface <- Full_results_segmented_041324 %>%
 
 # Running ANOVA
 anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness, data = Full_results_segmented_041324)
+summary(anova_result)
+
+# Running ANOVA accounting for variation between the different gels ("File")
+anova_result <- aov(Oxygen_Surface ~ Scaffold_Thickness + File, data = Full_results_segmented_041324)
 summary(anova_result)
 
 # What about DBL Thickness?
@@ -1234,6 +1266,11 @@ mean_DBL_end <- Full_results_segmented_041324 %>%
 # Running ANOVA
 anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented_041324)
 summary(anova_result)
+
+# Running ANOVA accounting for variation between the different gels ("File")
+anova_result <- aov(Breakpoint ~ Scaffold_Thickness + File, data = Full_results_segmented_041324)
+summary(anova_result)
+
 ```
 
 ### Combined plots
