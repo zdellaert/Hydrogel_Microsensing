@@ -1527,3 +1527,27 @@ ggsave("Plots/DBL_plot.png", DBL_plot, device = "png")
 anova_result <- aov(Breakpoint ~ Scaffold_Thickness, data = Full_results_segmented)
 summary(anova_result)
 ```
+
+
+## Anova on 040824 datasets only
+
+
+```{r}
+Full_results_segmented <- Full_results_segmented %>% filter(polymerization_date ==  "040824")
+
+# Running ANOVA
+anova_result <- aov(Flux ~ date + Scaffold_Thickness, data = Full_results_segmented)
+summary(anova_result)
+
+# What about for oxygen surface concentration?
+
+# Running ANOVA
+anova_result <- aov(Oxygen_Surface ~  date + Scaffold_Thickness, data = Full_results_segmented)
+summary(anova_result)
+
+# What about DBL Thickness?
+
+# Running ANOVA
+anova_result <- aov(Breakpoint ~  date + Scaffold_Thickness, data = Full_results_segmented)
+summary(anova_result)
+```
