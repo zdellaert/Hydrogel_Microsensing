@@ -149,7 +149,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope * 1000
         
     # Store results in dataframe
     results_df_1000um_segmented <- bind_rows(results_df_1000um_segmented, data.frame(
@@ -256,7 +256,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope * 1000
         
     # Store results in dataframe
     results_df_200um_segmented <- bind_rows(results_df_200um_segmented, data.frame(
@@ -337,7 +337,7 @@ library(cowplot)
 flux_plot <- ggplot(Full_results_segmented_041024, aes(x = Scaffold_Thickness, y = Flux)) +
   geom_boxplot() + geom_point(aes(color = File), show.legend = FALSE, position = position_jitter(width = 0.05)) + 
   geom_text(data = mean_flux, aes(label = paste("Mean Flux =\n", sprintf("%.2e", mean_flux)),
-                                  y = min-.000001), vjust = 0.1, position = position_nudge(x = 0.0)) +
+                                  y = min-.001), vjust = 0.1, position = position_nudge(x = 0.0)) +
   labs(x = "Thickness (µm)", y = "Flux") + theme_bw()
 
 # Plotting the surface O2 values for each thickness
@@ -610,7 +610,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope * 1000
         
     # Store results in dataframe
     results_df_1000um_segmented <- bind_rows(results_df_1000um_segmented, data.frame(
@@ -677,7 +677,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope * 1000
         
     # Store results in dataframe
     results_df_200um_segmented <- bind_rows(results_df_200um_segmented, data.frame(
@@ -997,7 +997,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope * 1000
         
     # Store results in dataframe
     results_df_1000um_segmented <- bind_rows(results_df_1000um_segmented, data.frame(
@@ -1064,7 +1064,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope * 1000
         
     # Store results in dataframe
     results_df_200um_segmented <- bind_rows(results_df_200um_segmented, data.frame(
@@ -1133,7 +1133,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope * 1000
         
     # Store results in dataframe
     results_df_1000um_segmented_high_light <- bind_rows(results_df_1000um_segmented_high_light, data.frame(
@@ -1200,7 +1200,7 @@ for (file_path in file_list) {
     
     # Calculate flux using Fick’s first law of diffusion
     DO2 <- 2.2417e-5  # Diffusion coefficient of oxygen
-    flux <- DO2 * regression_results$slope
+    flux <- DO2 * regression_results$slope * 1000
         
     # Store results in dataframe
     results_df_200um_segmented_high_light <- bind_rows(results_df_200um_segmented_high_light, data.frame(
